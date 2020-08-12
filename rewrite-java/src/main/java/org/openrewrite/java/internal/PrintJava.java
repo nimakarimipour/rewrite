@@ -23,6 +23,8 @@ import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
 
 import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.util.stream.StreamSupport.stream;
 import static org.openrewrite.java.tree.J.Modifier.*;
@@ -435,7 +437,17 @@ public class PrintJava extends AbstractJavaSourceVisitor<String> {
     public String visitNewClass(NewClass newClass) {
         String args = newClass.getArgs() == null ? "" :
                 fmt(newClass.getArgs(), "(" + visit(newClass.getArgs().getArgs(), ",") + ")");
-        return fmt(newClass, "new" + visit(newClass.getClazz()) + args + visit(newClass.getBody()));
+        String regex = "\\.\\s*new";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher m = pattern.matcher(visit(newClass.getClazz()));
+        boolean isInnerClassInstantiation = m.find();
+        String ans;
+        if(isInnerClassInstantiation){
+            ans = fmt(newClass, visit(newClass.getClazz()) + args + visit(newClass.getBody()));
+        }else{
+            ans = fmt(newClass, "new" + visit(newClass.getClazz()) + args + visit(newClass.getBody()));
+        }
+        return ans;
     }
 
     @Override
