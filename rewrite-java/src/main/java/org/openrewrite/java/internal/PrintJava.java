@@ -437,17 +437,13 @@ public class PrintJava extends AbstractJavaSourceVisitor<String> {
     public String visitNewClass(NewClass newClass) {
         String args = newClass.getArgs() == null ? "" :
                 fmt(newClass.getArgs(), "(" + visit(newClass.getArgs().getArgs(), ",") + ")");
-        String regex = "\\.\\s*new";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher m = pattern.matcher(visit(newClass.getClazz()));
-        boolean isInnerClassInstantiation = m.find();
-        String ans;
-        if(isInnerClassInstantiation){
-            ans = fmt(newClass, visit(newClass.getClazz()) + args + visit(newClass.getBody()));
+        Matcher m = Pattern.compile("\\.\\s*new").matcher(visit(newClass.getClazz()));
+        if(m.find()){
+            //Is an inner class instantiation, do not need do add the new keyword.
+            return fmt(newClass, visit(newClass.getClazz()) + args + visit(newClass.getBody()));
         }else{
-            ans = fmt(newClass, "new" + visit(newClass.getClazz()) + args + visit(newClass.getBody()));
+            return fmt(newClass, "new" + visit(newClass.getClazz()) + args + visit(newClass.getBody()));
         }
-        return ans;
     }
 
     @Override
