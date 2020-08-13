@@ -437,15 +437,11 @@ public class PrintJava extends AbstractJavaSourceVisitor<String> {
     public String visitNewClass(NewClass newClass) {
         String args = newClass.getArgs() == null ? "" :
                 fmt(newClass.getArgs(), "(" + visit(newClass.getArgs().getArgs(), ",") + ")");
+        String code = "";
 
-        boolean isInnerClassInstantiation = !((FieldAccess) newClass.getType().toTypeTree()).getSimpleName()
-                .equals(((Ident)newClass.getClazz()).printTrimmed());
-        if(isInnerClassInstantiation){
-            //Is an inner class instantiation, do not need do add the new keyword.
-            return fmt(newClass, visit(newClass.getClazz()) + args + visit(newClass.getBody()));
-        }else{
-            return fmt(newClass, "new" + visit(newClass.getClazz()) + args + visit(newClass.getBody()));
-        }
+        //Here we check if we need to add the "new" keyword at the beginning of the statement.
+        if(!Pattern.compile("\\.\\s*new").matcher(visit(newClass.getClazz())).find()) code = "new";
+        return fmt(newClass, code + visit(newClass.getClazz()) + args + visit(newClass.getBody()));
     }
 
     @Override
